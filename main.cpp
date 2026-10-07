@@ -1,6 +1,9 @@
 #include <iostream>
 #include <cstring>
 
+#include <thread>
+#include <chrono>
+
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <unistd.h>
@@ -55,6 +58,7 @@ int main() {
             "Hello, World!";
 
         // 8. Send it back
+        std::this_thread::sleep_for(std::chrono::seconds(5));
         send(clientSocket, response, strlen(response), 0);
 
         // 9. Close sockets
