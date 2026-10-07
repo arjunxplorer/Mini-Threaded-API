@@ -37,27 +37,29 @@ int main() {
     std::cout << "Server listening on port 8080...\n";
 
     // 5. Accept one client connection
-    int clientSocket = accept(serverSocket, nullptr, nullptr);
+    while(true) {
+        int clientSocket = accept(serverSocket, nullptr, nullptr);
 
-    // 6. Read the HTTP request
-    char buffer[4096] = {};
-    read(clientSocket, buffer, sizeof(buffer));
+        // 6. Read the HTTP request
+        char buffer[4096] = {};
+        read(clientSocket, buffer, sizeof(buffer));
 
-    std::cout << "Request:\n" << buffer << "\n";
+        std::cout << "Request:\n" << buffer << "\n";
 
-    // 7. Create an HTTP response
-    const char* response =
-        "HTTP/1.1 200 OK\r\n"
-        "Content-Type: text/plain\r\n"
-        "Content-Length: 13\r\n"
-        "\r\n"
-        "Hello, World!";
+        // 7. Create an HTTP response
+        const char* response =
+            "HTTP/1.1 200 OK\r\n"
+            "Content-Type: text/plain\r\n"
+            "Content-Length: 13\r\n"
+            "\r\n"
+            "Hello, World!";
 
-    // 8. Send it back
-    send(clientSocket, response, strlen(response), 0);
+        // 8. Send it back
+        send(clientSocket, response, strlen(response), 0);
 
-    // 9. Close sockets
-    close(clientSocket);
+        // 9. Close sockets
+        close(clientSocket);
+    }
     close(serverSocket);
 
     return 0;
