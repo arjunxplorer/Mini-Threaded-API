@@ -9,6 +9,7 @@
 #include <unistd.h>
 
 void handleClient(int clientSocket){
+    auto start = std::chrono::steady_clock::now();
     // 6. Read the HTTP request
     char buffer[4096] = {};
     read(clientSocket, buffer, sizeof(buffer));
@@ -26,7 +27,10 @@ void handleClient(int clientSocket){
     // 8. Send it back
     std::this_thread::sleep_for(std::chrono::seconds(5));
     send(clientSocket, response, strlen(response), 0);
+    auto end = std::chrono::steady_clock::now();
 
+    auto elapsed = end -  start;
+    std::cout<< "Total time: " << elapsed.count()<< std::endl;
     // 9. Close sockets
     close(clientSocket);
 
@@ -70,7 +74,9 @@ int main() {
         if(clientSocket == -1){
             std::cerr <<"Accept Failed"<< std::endl;
         }
-        handleClient(clientSocket);
+
+        std::thread th(handleClient,clientSocket);
+        th.detach();
 
     }
     close(serverSocket);
