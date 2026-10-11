@@ -3,10 +3,20 @@
 
 #include <thread>
 #include <chrono>
-
+#include <queue>
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <unistd.h>
+#include <mutex>
+#include <condition_variable>
+
+
+std::queue<int> clientQueue;
+std::mutex queueMutex;
+std::condition_variable queueCondition;
+
+
+
 
 void handleClient(int clientSocket){
     auto start = std::chrono::steady_clock::now();
@@ -34,6 +44,19 @@ void handleClient(int clientSocket){
     // 9. Close sockets
     close(clientSocket);
 
+}
+void worker(){
+    while(true){
+        std::unique_lock<std::mutex> lock(queueMutex);
+        while(clientQueue.size() == 0){
+            queueCondition.wait(lock);
+        }
+        int Client = clientQueue.front();
+        clientQueue.pop();
+        lock.unlock();
+        handleClient(Client);
+
+    }
 }
 
 int main() {
@@ -67,6 +90,11 @@ int main() {
 
     std::cout << "Server listening on port 8080...\n";
 
+    for(int i=0; i< 4; i++){
+        std::thread th(worker);
+        th.detach();
+    }
+
     // 5. Accept one client connection
     while(true) {
         int clientSocket = accept(serverSocket, nullptr, nullptr);
@@ -74,9 +102,11 @@ int main() {
         if(clientSocket == -1){
             std::cerr <<"Accept Failed"<< std::endl;
         }
-
-        std::thread th(handleClient,clientSocket);
-        th.detach();
+        queueMutex.lock();
+        clientQueue.push(clientSocket);
+        queueMutex.unlock();
+        
+        queueCondition.notify_one();
 
     }
     close(serverSocket);
