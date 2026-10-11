@@ -8,6 +8,30 @@
 #include <netinet/in.h>
 #include <unistd.h>
 
+void handleClient(int clientSocket){
+    // 6. Read the HTTP request
+    char buffer[4096] = {};
+    read(clientSocket, buffer, sizeof(buffer));
+
+    std::cout << "Request:\n" << buffer << "\n";
+
+    // 7. Create an HTTP response
+    const char* response =
+        "HTTP/1.1 200 OK\r\n"
+        "Content-Type: text/plain\r\n"
+        "Content-Length: 13\r\n"
+        "\r\n"
+        "Hello, World!";
+
+    // 8. Send it back
+    std::this_thread::sleep_for(std::chrono::seconds(5));
+    send(clientSocket, response, strlen(response), 0);
+
+    // 9. Close sockets
+    close(clientSocket);
+
+}
+
 int main() {
     // 1. Create the server socket
     int serverSocket = socket(AF_INET, SOCK_STREAM, 0);
@@ -43,26 +67,11 @@ int main() {
     while(true) {
         int clientSocket = accept(serverSocket, nullptr, nullptr);
 
-        // 6. Read the HTTP request
-        char buffer[4096] = {};
-        read(clientSocket, buffer, sizeof(buffer));
+        if(clientSocket == -1){
+            std::cerr <<"Accept Failed"<< std::endl;
+        }
+        handleClient(clientSocket);
 
-        std::cout << "Request:\n" << buffer << "\n";
-
-        // 7. Create an HTTP response
-        const char* response =
-            "HTTP/1.1 200 OK\r\n"
-            "Content-Type: text/plain\r\n"
-            "Content-Length: 13\r\n"
-            "\r\n"
-            "Hello, World!";
-
-        // 8. Send it back
-        std::this_thread::sleep_for(std::chrono::seconds(5));
-        send(clientSocket, response, strlen(response), 0);
-
-        // 9. Close sockets
-        close(clientSocket);
     }
     close(serverSocket);
 
